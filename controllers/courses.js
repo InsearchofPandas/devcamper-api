@@ -8,21 +8,19 @@ const ErrorResponse = require('../utils/errorResponse');
 // ROUTE  GET /api/v1/boutcamps/:bootcampId/courses
 // ACCESS Public
 exports.getCourses = asyncHandler(async (req, res, next) => {
-  let query;
-
   if (req.params.bootcampId) {
-    query = Course.find({ bootcamp: req.params.bootcampId });
-  } else {
-    query = Course.find().populate({
-      path: 'bootcamp',
-      select: 'name description',
+    const courses = await Course.find({
+      bootcamp: req.params.bootcampId,
     });
-  }
 
-  const courses = await query;
-  res
-    .status(200)
-    .json({ success: true, count: courses.length, data: courses });
+    return res.status(200).json({
+      success: true,
+      count: courses.length,
+      data: courses,
+    });
+  } else {
+    res.status(200).json(res.advancedResults);
+  }
 });
 
 // DESC   Get Single Course
@@ -36,12 +34,17 @@ exports.getCourse = asyncHandler(async (req, res, next) => {
 
   if (!course) {
     return next(
-      new ErrorResponse(`No course with the id of ${req.params.id}`),
-      404,
+      new ErrorResponse(
+        `No course with the id of ${req.params.id}`,
+        404,
+      ),
     );
   }
 
-  res.status(200).json({ success: true, data: course });
+  res.status(200).json({
+    success: true,
+    data: course,
+  });
 });
 
 // DESC   Add Single Course
