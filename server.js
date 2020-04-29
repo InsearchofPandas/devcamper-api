@@ -5,6 +5,13 @@ const morgan = require('morgan');
 const colors = require('colors');
 const fileupload = require('express-fileupload');
 const connectDB = require('./config/db');
+const cookieParser = require('cookie-parser');
+const mongoSanitize = require('express-mongo-sanitize');
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
 const errorHandler = require('./middleware/error');
 
 // Load env vars
@@ -19,6 +26,32 @@ const app = express();
 // File uploading
 app.use(fileupload());
 
+// SECURITY
+
+// Sanitize Data - Prevent No Sql injections
+app.use(mongoSanitize());
+
+// Prevent cross site scripting (XSS) attacks
+app.use(xss());
+
+// Set security headers
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowsMS: 10 * 60 * 1000, // 10 mins
+  max: 100,
+});
+app.use(limiter);
+
+// Prevent http param pollution
+app.use(hpp());
+
+// Enable CORS
+app.use(cors());
+
+/// END OF SECURITY \\\
+
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -31,6 +64,9 @@ const reviews = require('./routes/reviews');
 
 // Body Parser
 app.use(express.json());
+
+// Cookie parser
+app.use(cookieParser());
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
