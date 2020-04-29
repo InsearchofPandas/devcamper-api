@@ -8,6 +8,7 @@ const dotenv = require('dotenv');
 
 exports.protect = asyncHandler(async (req, res, next) => {
   let token;
+  //console.log(req.headers.cookie);
 
   if (
     req.headers.authorization &&
@@ -17,10 +18,18 @@ exports.protect = asyncHandler(async (req, res, next) => {
     token = req.headers.authorization.split(' ')[1];
     // Set token from cookie
   }
-  // else if (req.cookies.token) {
+
+  console.log(req.headers);
+
+  // if (req.cookies.token) {
   //   token = req.cookies.token;
   // }
 
+  console.log('FUCCCCKKK'.blue);
+
+  if (req.headers.cookie) {
+    token = req.headers.cookie;
+  }
   // Make sure token exists
   if (!token) {
     return next(
@@ -41,3 +50,19 @@ exports.protect = asyncHandler(async (req, res, next) => {
     );
   }
 });
+
+// grant access to specific roles
+
+exports.authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorResponse(
+          `User role ${req.user.role} is not authorized to access this route`,
+          403,
+        ),
+      );
+    }
+    next();
+  };
+};
